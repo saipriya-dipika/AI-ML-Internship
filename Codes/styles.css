@@ -1,0 +1,235 @@
+body {
+    background: #f0f2f5;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar {
+    width: 30%;
+    padding: 20px;
+    background: #fafafa;
+    border-right: 1px solid #e5e5e5;
+}
+
+.content {
+    width: 70%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a3c6c;
+    margin-bottom: 15px;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a3c6c;
+    margin-bottom: 5px;
+    display: block;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    color: #333;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus {
+    border-color: #1a3c6c;
+    outline: none;
+    box-shadow: 0 0 3px rgba(26, 60, 108, 0.3);
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.tab-button {
+    padding: 6px 12px;
+    background: #e5e5e5;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.tab-button:hover {
+    background: #d5d5d5;
+}
+
+.tab-button.active {
+    background: #1a3c6c;
+    color: #fff;
+}
+
+.tab-content {
+    width: 100%;
+    flex-grow: 1;
+    border: none;
+    border-radius: 4px;
+}
+
+.tab-pane {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.plot-comparison {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px 0;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.plot-wrapper {
+    width: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#plot, #comp-plot {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+#dashboard-container {
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+#grafana-dashboard {
+    width: 100%;
+    height: 80%;
+    border: none;
+}
+
+#grafana-url-container {
+    margin-top: 10px;
+}
+
+#grafana-url {
+    font-size: 13px;
+    color: #1a3c6c;
+    word-break: break-all;
+}
+
+.chatbot {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chatbot h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a3c6c;
+    margin-bottom: 8px;
+}
+
+.chat-history {
+    height: 520px;
+    overflow-y: auto;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 10px;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+}
+
+.chat-message.user {
+    color: #1a3c6c;
+    font-weight: 500;
+}
+
+.chat-message.bot {
+    color: #555;
+}
+
+.chat-input {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#chat-input {
+    flex-grow: 1;
+    padding: 8px;
+    font-size: 13px;
+}
+
+#chat-send {
+    padding: 8px 12px;
+    background: #1a3c6c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#chat-send:hover {
+    background: #163258;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .sidebar, .content {
+        width: 100%;
+    }
+    .plot-wrapper {
+        width: 95%;
+    }
+    .chat-history {
+        height: 200px;
+    }
+}

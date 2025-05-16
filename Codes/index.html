@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engine Data Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Engine Data Analysis</h1>
+            <label for="run_id">Run ID:</label>
+            <input type="text" id="run_id" placeholder="Enter Run ID">
+            <label for="modules-dropdown">Module:</label>
+            <select id="modules-dropdown">
+                <option value="" disabled selected>Select Module</option>
+                {% for module in module_names %}
+                    <option value="{{ module }}">{{ module }}</option>
+                {% endfor %}
+            </select>
+            <div class="tabs">
+                <button class="tab-button active" id="plot-tab">Plot</button>
+                <button class="tab-button" id="dashboard-tab">Dashboard</button>
+            </div>
+            <div class="chatbot">
+                <h3>Diagnostics Chat</h3>
+                <div id="chat-history" class="chat-history"></div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Ask about the data...">
+                    <button id="chat-send">Send</button>
+                </div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="tab-content">
+                <div id="plot-container" class="tab-pane active">
+                    <div class="plot-comparison">
+                        <div class="plot-wrapper">
+                            <img id="plot" src="" alt="Current Plot">
+                        </div>
+                        <div class="plot-wrapper">
+                            <img id="comp-plot" src="" alt="Comparison Plot">
+                        </div>
+                    </div>
+                </div>
+                <div id="dashboard-container" class="tab-pane">
+                    <div class="grafana-content">
+                        <div class="section-title">Grafana Dashboard:</div>
+                        <iframe id="grafana-dashboard" src="" frameborder="1"></iframe>
+                        <div id="grafana-url-container">
+                            <h3>Generated Grafana Dashboard URL:</h3>
+                            <p id="grafana-url"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const moduleToDashboardUrl = {
+            'run_data-run_data_module1': 'http://localhost:3000/public-dashboards/c71c4d30299b482ca6dceaa184913f9c',
+            'run_data-run_data_module2': 'http://localhost:3000/public-dashboards/e466e518d11e42ee882274c094afb5cc',
+            'run_data-run_data_module3': 'http://localhost:3000/public-dashboards/c71c4d30299b482ca6dceaa184913f9c'
+        };
+
+        function appendChatMessage(sender, message) {
+            const chatHistory = document.getElementById('chat-history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+            messageDiv.textContent = message;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function generatePlot() {
+            const runId = document.getElementById('run_id').value.trim();
+            const selectedModule = document.getElementById('modules-dropdown').value;
+            const dashboardIframe = document.getElementById('grafana-dashboard');
+            const grafanaUrlDisplay = document.getElementById('grafana-url');
+            const plotImg = document.getElementById('plot');
+            const compPlotImg = document.getElementById('comp-plot');
+
+            if (runId && selectedModule) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/generate_plot', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log('Response:', data);
+                        if (data.image) {
+                            plotImg.src = 'data:image/png;base64,' + data.image;
+                            compPlotImg.src = '';
+                            appendChatMessage('bot', `Analysis for ${runId} (${selectedModule}):\n${data.comments || 'No comments generated.'}`);
+
+                            const tableName = data.table;
+                            const grafanaKey = `${tableName}-${selectedModule}`;
+                            const baseUrl = moduleToDashboardUrl[grafanaKey] || moduleToDashboardUrl['run_data-run_data_module1'];
+                            const grafanaUrl = `${baseUrl}?var-run_id=${encodeURIComponent(runId)}`;
+                            console.log('Updating iframe src:', grafanaUrl);
+                            dashboardIframe.src = grafanaUrl;
+                            grafanaUrlDisplay.textContent = grafanaUrl;
+                        } else {
+                            plotImg.src = '';
+                            compPlotImg.src = '';
+                            appendChatMessage('bot', data.message || 'No image data returned.');
+                            dashboardIframe.src = '';
+                            grafanaUrlDisplay.textContent = 'No dashboard URL generated.';
+                        }
+                    } else {
+                        appendChatMessage('bot', 'Server error: ' + xhr.status);
+                        plotImg.src = '';
+                        compPlotImg.src = '';
+                        dashboardIframe.src = '';
+                        grafanaUrlDisplay.textContent = 'Error fetching data.';
+                    }
+                };
+                xhr.onerror = function () {
+                    appendChatMessage('bot', 'Request failed.');
+                    plotImg.src = '';
+                    compPlotImg.src = '';
+                    dashboardIframe.src = '';
+                    grafanaUrlDisplay.textContent = 'Request failed.';
+                };
+                console.log('Sending:', { run_id: runId, selected_module: selectedModule });
+                xhr.send(JSON.stringify({ run_id: runId, selected_module: selectedModule }));
+            } else {
+                plotImg.src = '';
+                compPlotImg.src = '';
+                dashboardIframe.src = '';
+                grafanaUrlDisplay.textContent = 'Please enter a Run ID and select a Module.';
+                appendChatMessage('bot', 'Please enter a Run ID and select a Module.');
+            }
+        }
+
+        function sendChatQuery() {
+            const query = document.getElementById('chat-input').value.trim();
+            if (!query) return;
+            appendChatMessage('user', query);
+            document.getElementById('chat-input').value = '';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/chat', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    appendChatMessage('bot', data.response || 'No response generated.');
+                    const compPlotImg = document.getElementById('comp-plot');
+                    if (data.comp_image) {
+                        compPlotImg.src = 'data:image/png;base64,' + data.comp_image;
+                    } else {
+                        compPlotImg.src = '';
+                    }
+                } else {
+                    appendChatMessage('bot', 'Chat error: ' + xhr.status);
+                    document.getElementById('comp-plot').src = '';
+                }
+            };
+            xhr.onerror = function () {
+                appendChatMessage('bot', 'Chat request failed.');
+                document.getElementById('comp-plot').src = '';
+            };
+            xhr.send(JSON.stringify({ query: query }));
+        }
+
+        document.getElementById('run_id').addEventListener('input', generatePlot);
+        document.getElementById('modules-dropdown').addEventListener('change', generatePlot);
+        document.getElementById('chat-send').addEventListener('click', sendChatQuery);
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendChatQuery();
+        });
+
+        document.getElementById('plot-tab').addEventListener('click', function () {
+            document.getElementById('plot-container').classList.add('active');
+            document.getElementById('dashboard-container').classList.remove('active');
+            this.classList.add('active');
+            document.getElementById('dashboard-tab').classList.remove('active');
+        });
+
+        document.getElementById('dashboard-tab').addEventListener('click', function () {
+            document.getElementById('dashboard-container').classList.add('active');
+            document.getElementById('plot-container').classList.remove('active');
+            this.classList.add('active');
+            document.getElementById('plot-tab').classList.remove('active');
+        });
+    </script>
+</body>
+</html>
